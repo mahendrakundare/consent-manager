@@ -244,6 +244,7 @@ public class ConsentManager {
 
         return HIPConsentArtefactRepresentation
                 .builder()
+                .consentId(consentArtefact.getConsentId())
                 .consentDetail(hipConsentArtefact)
                 .signature(signature)
                 .status(status)
