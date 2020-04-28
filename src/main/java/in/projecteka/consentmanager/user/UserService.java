@@ -13,6 +13,7 @@ import in.projecteka.consentmanager.user.model.OtpVerification;
 import in.projecteka.consentmanager.user.model.SignUpRequest;
 import in.projecteka.consentmanager.user.model.SignUpSession;
 import in.projecteka.consentmanager.user.model.Token;
+import in.projecteka.consentmanager.user.model.UpdateUserRequest;
 import in.projecteka.consentmanager.user.model.User;
 import in.projecteka.consentmanager.user.model.UserCredential;
 import in.projecteka.consentmanager.user.model.UserSignUpEnquiry;
@@ -24,6 +25,7 @@ import reactor.core.publisher.Mono;
 import java.util.Collections;
 import java.util.UUID;
 
+import static in.projecteka.consentmanager.clients.ClientError.failedToUpdateUser;
 import static in.projecteka.consentmanager.clients.ClientError.userAlreadyExists;
 import static in.projecteka.consentmanager.clients.ClientError.userNotFound;
 import static java.lang.String.format;
@@ -84,6 +86,35 @@ public class UserService {
                 .flatMap(mobileNumber -> userExistsWith(signUpRequest.getUsername())
                         .switchIfEmpty(Mono.defer(() -> createUserWith(mobileNumber, signUpRequest, keycloakUser)))
                         .cast(Session.class));
+    }
+
+    //TODO: Veena: Update method in user service to update users' password
+    public Mono<Session> update(UpdateUserRequest updateUserRequest, String sessionId) {
+        String userName = updateUserRequest.getUsername();
+        return userRepository.userWith(userName)
+                .switchIfEmpty(Mono.error(new InvalidRequestException("user not verified")))
+                .flatMap(user -> {
+                    return signupService.getMobileNumber(sessionId)
+                            .switchIfEmpty(Mono.error(new InvalidRequestException("mobile number not verified")))
+                            .then(updatedSessionFor(updateUserRequest)
+                                    .cast(Session.class));
+                });
+    }
+
+    //TODO: Veena: update credentials in keycloak
+    private Mono<Session> updatedSessionFor(UpdateUserRequest updateUserRequest) {
+        return tokenService.tokenForAdmin()
+                .flatMap(accessToken -> {
+                    String token = String.format("Bearer %s", accessToken.getAccessToken());
+                    return identityServiceClient.getUser(updateUserRequest.getUsername(), token)
+                            .map(cloakUser -> identityServiceClient.updateUser(accessToken, cloakUser.getId(),
+                                    updateUserRequest.getPassword()));
+                })
+                .onErrorResume(error -> {
+                    System.out.println("ERROR: " + error);
+                    return Mono.error(failedToUpdateUser());
+                })
+                .then(tokenService.tokenForUser(updateUserRequest.getUsername(), updateUserRequest.getPassword()));
     }
 
     private Mono<Object> userExistsWith(String username) {

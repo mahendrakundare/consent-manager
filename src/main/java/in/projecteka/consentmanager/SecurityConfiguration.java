@@ -57,15 +57,17 @@ public class SecurityConfiguration {
             ServerSecurityContextRepository securityContextRepository) {
 
         final String[] whitelistedUrls = {"/**.json",
-                                          "/ValueSet/**.json",
-                                          "/users/verify",
-                                          "/users/permit",
-                                          "/sessions",
-                                          "/**.html",
-                                          "/**.js",
-                                          "/**.yaml",
-                                          "/**.css",
-                                          "/**.png"};
+                "/ValueSet/**.json",
+                "/patients/generateotp",
+                "/patients/verifyotp",
+                "/users/verify",
+                "/users/permit",
+                "/sessions",
+                "/**.html",
+                "/**.js",
+                "/**.yaml",
+                "/**.css",
+                "/**.png"};
         httpSecurity.authorizeExchange().pathMatchers(whitelistedUrls).permitAll();
         httpSecurity.httpBasic().disable().formLogin().disable().csrf().disable().logout().disable();
         httpSecurity.authorizeExchange().pathMatchers("/**").authenticated();
@@ -81,8 +83,8 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public Authenticator authenticator(@Qualifier("identityServiceJWKSet") JWKSet jwkSet, CacheAdapter<String,String> blacklistedTokens, ConfigurableJWTProcessor<com.nimbusds.jose.proc.SecurityContext> jwtProcessor) {
-        return new Authenticator(jwkSet,blacklistedTokens, jwtProcessor);
+    public Authenticator authenticator(@Qualifier("identityServiceJWKSet") JWKSet jwkSet, CacheAdapter<String, String> blacklistedTokens, ConfigurableJWTProcessor<com.nimbusds.jose.proc.SecurityContext> jwtProcessor) {
+        return new Authenticator(jwkSet, blacklistedTokens, jwtProcessor);
     }
 
     @Bean({"jwtProcessor"})
@@ -191,7 +193,8 @@ public class SecurityConfiguration {
         }
 
         private boolean isSignUpRequest(String url, HttpMethod httpMethod) {
-            return ("/patients/profile").equals(url) && HttpMethod.POST.equals(httpMethod);
+            boolean isSignUp = (("/patients/profile").equals(url) && HttpMethod.POST.equals(httpMethod)) || (("/patients/profile/update").equals(url) && HttpMethod.PUT.equals(httpMethod));
+            return isSignUp;
         }
     }
 

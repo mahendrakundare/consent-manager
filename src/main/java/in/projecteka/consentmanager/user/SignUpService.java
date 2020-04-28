@@ -1,5 +1,6 @@
 package in.projecteka.consentmanager.user;
 
+import in.projecteka.consentmanager.common.Caller;
 import in.projecteka.consentmanager.common.cache.CacheAdapter;
 import in.projecteka.consentmanager.user.exception.InvalidSessionException;
 import in.projecteka.consentmanager.user.model.SignUpSession;
@@ -18,6 +19,7 @@ import reactor.core.publisher.Mono;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 
