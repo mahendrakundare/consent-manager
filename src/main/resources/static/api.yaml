@@ -801,6 +801,102 @@ paths:
             application/xml:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /patients/generate-otp:
+    post:
+      tags:
+        - account
+      summary: Generate OTP for the user
+      description: Generates OTP for the given user and sent to the users' verified identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateOtpRequest'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/GenerateOtpRequest'
+      responses:
+        '200':
+          description: A session ID is returned and OTP will be sent to users' verified identifier.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateOtpResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/GenerateOtpResponse'
+        '400':
+          description: >
+            **Causes:**
+              * Invalid Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: >
+            **Causes:**
+              * Downstream services are down
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /patients/verify-otp:
+    post:
+      tags:
+        - account
+      summary: Verifies OTP entered by user
+      description: Verifies OTP given by user and returns a temporary token to reset password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyOtpRequest'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/VerifyOtpRequest'
+      responses:
+        '200':
+          description: A temporary token is returned to the user that is used to reset password.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyOtpResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/VerifyOtpResponse'
+        '400':
+          description: >
+            **Causes:**
+              * Invalid Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: >
+            **Causes:**
+              * Downstream services are down
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
   /patients/enquiries:
     post:
       tags:
@@ -1114,7 +1210,7 @@ paths:
       description: Patient can change password, once they have verified one of the identifiers.
       parameters:
         - name: Authorization
-          description: Token received after successful verification of identifier.
+          description: Token received after successful verification of OTP.
           in: header
           required: true
           schema:
@@ -1616,6 +1712,10 @@ components:
           type: string
           xml:
             attribute: true
+        name:
+          type: string
+          xml:
+            attribute: true
       xml:
         name: OrganizationResponse
     Organization:
@@ -1844,6 +1944,7 @@ components:
       type: object
       required:
         - id
+        - name
       properties:
         id:
           type: string
@@ -2015,6 +2116,43 @@ components:
         keyValue:
           type: string
           format: string
+    VerifyOtpRequest:
+      type: object
+      required:
+        - sessionId
+        - value
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+        value:
+          type: string
+          example: 666666
+          description: '6 digit number'
+    VerifyOtpResponse:
+      type: object
+      properties:
+        temporaryToken:
+          type: string
+          example: eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhMjQ2NWRmYy1iY2Q2LTRmNTItYTQxYS03MjA4Mjg3YmE1NWMiLCJleHAiOjE1ODgxODIzMDIsImlhdCI6MTU4ODE2NDMwMn0.CmOpT1Q-s05WY9aq5YbAz-SX9AgaypzrxA273mxyyUSvOqtKbZCIruBLoDg61PK2tCY_NbHY-8mWkshYFP-IYQ
+          description: JWT Token
+    GenerateOtpRequest:
+      type: object
+      required:
+        - username
+      properties:
+        username:
+          type: string
+          format: string
+          example: raj.sharma@ncg
+    GenerateOtpResponse:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
     MobileNumberEnquiryRequest:
       type: object
       required:
